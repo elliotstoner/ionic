@@ -429,6 +429,7 @@ export abstract class NavController implements NavigationContainer {
    *  current navigation stack.
    * Pass any aditional information along as an object. This additional information is accessible through NavParams
    *
+   * @author Elliot Stoner
    * @param {Page} page The component class or deeplink name you want to push onto the navigation stack.
    * @param {object} [params={}] Any NavParams you want to pass along to the next view.
    * @param {object} [opts={}] Nav options to go with this transition.
@@ -441,6 +442,7 @@ export abstract class NavController implements NavigationContainer {
    * If the requested page is not found in history, it pushes the page onto the end of the current navigation stack
    * Pass any aditional information along as an object. This additional information is accessible through NavParams
    *
+   * @author Elliot Stoner
    * @param {Page} page The component class or deeplink name you want to push onto the navigation stack.
    * @param {object} [params={}] Any NavParams you want to pass along to the next view.
    * @param {object} [opts={}] Nav options to go with this transition.
@@ -486,6 +488,7 @@ export abstract class NavController implements NavigationContainer {
    * Call to navigte back from a curernt component, while saving the current component in history.
    * Similar to `push()`, you can also pass navigation options.
    *
+   * @author Elliot Stoner
    * @param {object} [opts={}] Nav options to go with this transition.
    * @returns {Promise} Returns a promise which is resolved when the transition has completed.
    */
