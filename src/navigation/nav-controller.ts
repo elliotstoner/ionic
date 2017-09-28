@@ -423,6 +423,32 @@ export abstract class NavController implements NavigationContainer {
   abstract push(page: Page | string, params?: any, opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
 
   /**
+   * Checks the navigation history to see if the next page is the requested page
+   *  If the next page is the requested page, it pushes that page and conserves the view history
+   *  If the next page isn't the requested page, it clears the view history and pushes the new page onto the
+   *  current navigation stack.
+   * Pass any aditional information along as an object. This additional information is accessible through NavParams
+   *
+   * @param {Page} page The component class or deeplink name you want to push onto the navigation stack.
+   * @param {object} [params={}] Any NavParams you want to pass along to the next view.
+   * @param {object} [opts={}] Nav options to go with this transition.
+   * @returns {Promise} Returns a promise which is resolved when the transition has completed.
+   */
+  abstract pushOrKillAll(page: Page, params?: any, opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
+
+  /**
+   * Checks the navigation history for the requested page and pushes pages on until it reaches that page.
+   * If the requested page is not found in history, it pushes the page onto the end of the current navigation stack
+   * Pass any aditional information along as an object. This additional information is accessible through NavParams
+   *
+   * @param {Page} page The component class or deeplink name you want to push onto the navigation stack.
+   * @param {object} [params={}] Any NavParams you want to pass along to the next view.
+   * @param {object} [opts={}] Nav options to go with this transition.
+   * @returns {Promise} Returns a promise which is resolved when the transition has completed.
+   */
+  abstract pushTo(page: Page, params?: any, opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
+
+  /**
    * Inserts a component into the nav stack at the specified index. This is useful if
    * you need to add a component at any point in your navigation stack.
    *
@@ -445,7 +471,7 @@ export abstract class NavController implements NavigationContainer {
    * @param {object} [opts={}] Nav options to go with this transition.
    * @returns {Promise} Returns a promise which is resolved when the transition has completed.
    */
-  abstract insertPages(insertIndex: number, insertPages: Array<{page: Page | string, params?: any}>, opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
+  abstract insertPages(insertIndex: number, insertPages: Array<{ page: Page | string, params?: any }>, opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
 
   /**
    * Call to navigate back from a current component. Similar to `push()`, you
@@ -455,6 +481,15 @@ export abstract class NavController implements NavigationContainer {
    * @returns {Promise} Returns a promise which is resolved when the transition has completed.
    */
   abstract pop(opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
+
+  /**
+   * Call to navigte back from a curernt component, while saving the current component in history.
+   * Similar to `push()`, you can also pass navigation options.
+   *
+   * @param {object} [opts={}] Nav options to go with this transition.
+   * @returns {Promise} Returns a promise which is resolved when the transition has completed.
+   */
+  abstract popSaveHistory(opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
 
   /**
    * Navigate back to the root of the stack, no matter how far back that is.
@@ -528,7 +563,7 @@ export abstract class NavController implements NavigationContainer {
    * @param {Object} [opts={}] Nav options to go with this transition.
    * @returns {Promise} Returns a promise which is resolved when the transition has completed.
    */
-  abstract setPages(pages: ({page: Page | string, params?: any} | ViewController)[], opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
+  abstract setPages(pages: ({ page: Page | string, params?: any } | ViewController)[], opts?: NavOptions, done?: TransitionDoneFn): Promise<any>;
 
   /**
    * @param {number} index The index of the page to get.

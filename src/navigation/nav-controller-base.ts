@@ -43,6 +43,7 @@ import { Platform } from '../platform/platform';
 import { SwipeBackGesture } from './swipe-back';
 import { Transition } from '../transitions/transition';
 import { TransitionController } from '../transitions/transition-controller';
+import { Page } from './nav-util';
 
 /**
  * @hidden
@@ -62,6 +63,7 @@ export class NavControllerBase extends Ion implements NavController {
   _trnsTm: boolean = false;
   _viewport: ViewContainerRef;
   _views: ViewController[] = [];
+  _viewsHistory: ViewController[] = [];
   _zIndexOffset: number = 0;
   _destroyed: boolean;
 
@@ -106,6 +108,66 @@ export class NavControllerBase extends Ion implements NavController {
     this.id = 'n' + (++ctrlIds);
     this._destroyed = false;
   }
+
+  /* ---------------------------- CUSTOM METHODS ---------------------------- */
+
+  /* PushTo
+   * Checks viewsHistory for the requested page and pushes pages on until it reaches that page.
+   * If the requested page is not found, it pushes the page onto the end of the queue
+   *
+   * Author: Elliot Stoner estoner@captechconsulting.com
+   */
+  pushTo(page: Page, params?: any, opts?: NavOptions, done?: TransitionDoneFn): Promise<any> {
+    var pages: any[] = [page];
+    return convertToViews(this._linker, pages).then((viewControllers) => {
+      while (this._viewsHistory.length > 0) {
+        var viewToPush = this._viewsHistory.pop();
+        // push viewToPush onto current queue
+        var retval = this.insert(this._views.length - 1, viewToPush, params, opts, done);
+        if (viewToPush === viewControllers[0].component) { return retval; }
+      }
+      this.push(page, params, opts, done);
+    });
+  }
+
+  /* PushToOrKillAll
+   * Checks the viewsHistory to see if the next page is the requested page
+   *  If the next page is the requested page, it pushes that page and saves the view history
+   *  If the next page isn't the requested page, it clears the view history and pushes the new page
+   *
+   * Author: Elliot Stoner estoner@captechconsulting.com
+   */
+  pushOrKillAll(page: Page, params?: any, opts?: NavOptions, done?: TransitionDoneFn): Promise<any> {
+    var pages: any[] = [page];
+    return convertToViews(this._linker, pages).then((viewControllers) => {
+      if (this._viewsHistory[this._viewsHistory.length - 1].component === viewControllers[0]) {
+        var viewToPush = this._viewsHistory.pop();
+        // push viewToPush onto current queue at end
+        return this.insert(this._views.length - 1, viewToPush, params, opts, done);
+      } else {
+        this._viewsHistory = [];
+        return this.push(page, params, opts, done);
+      }
+    });
+  }
+
+  /* PopSaveHistory
+   * Saves the current page in ViewHistory before popping
+   *
+   * Author: Elliot Stoner estoner@captechconsulting.com
+   */
+  popSaveHistory(opts?: NavOptions, done?: TransitionDoneFn): Promise<any> {
+    // Save history before popping
+    this._viewsHistory.push(this.getActive());
+
+    // Process pop
+    return this._queueTrns({
+      removeStart: -1,
+      removeCount: 1,
+      opts: opts,
+    }, done);
+  }
+  /* -------------------------- END CUSTOM METHODS -------------------------- */
 
   push(page: any, params?: any, opts?: NavOptions, done?: TransitionDoneFn): Promise<any> {
     return this._queueTrns({
@@ -522,7 +584,7 @@ export class NavControllerBase extends Ion implements NavController {
     assert(enteringView, 'enteringView must be non null');
     assert(enteringView._state === STATE_NEW, 'enteringView state must be NEW');
 
-     // render the entering view, and all child navs and views
+    // render the entering view, and all child navs and views
     // entering view has not been initialized yet
     const componentProviders = ReflectiveInjector.resolve([
       { provide: NavController, useValue: this },
@@ -1081,11 +1143,11 @@ export class NavControllerBase extends Ion implements NavController {
 
   canSwipeBack(): boolean {
     return (this._sbEnabled &&
-            !this._isPortal &&
-            !this._children.length &&
-            !this.isTransitioning() &&
-            this._app.isEnabled() &&
-            this.canGoBack());
+      !this._isPortal &&
+      !this._children.length &&
+      !this.isTransitioning() &&
+      this._app.isEnabled() &&
+      this.canGoBack());
   }
 
   canGoBack(): boolean {
@@ -1167,7 +1229,7 @@ export class NavControllerBase extends Ion implements NavController {
   dismissPageChangeViews() {
     for (let view of this._views) {
       if (view.data && view.data.dismissOnPageChange) {
-        view.dismiss().catch(() => {});
+        view.dismiss().catch(() => { });
       }
     }
   }
